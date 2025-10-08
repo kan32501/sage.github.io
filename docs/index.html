@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SAGE: Generative Video Transitions</title>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+    </script>
+
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
+    <style>
+        /* Increase width by 30% for is-max-desktop */
+        .container.is-max-desktop {
+            max-width: 85%;
+            /* Increase width by 30% */
+        }
+    </style>
+    <style>
+        .sync-video {
+            width: 130px;
+            height: 130px;       /* pick the common height you want */
+            object-fit: cover;   /* crop to square if aspect ratio doesn’t match */
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        .sync-images {
+            width: 190;
+            height: 130px;       /* pick the common height you want */
+            object-fit: cover;   /* crop to square if aspect ratio doesn’t match */
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        .sync-cond-videos {
+            width: 190px;
+            height: 130px;       /* consistent square crop */
+            object-fit: cover;   /* ensures video/image fills square */
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        .sync-seine-video {
+            width: 300px;
+            height: 175px;       /* consistent square crop */
+            object-fit: cover;   /* ensures video/image fills square */
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        .raw-videos {
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        .ablation-videos {
+            border-radius: 3px;  /* optional: round corners like images */
+        }
+
+        table {
+            margin: 40px auto 0 auto; /* add spacing above the table */
+        }
+        td {
+            padding: 5px;
+        }
+        p.description {
+            margin-bottom: 20px; /* spacing below the text */
+        }
+
+        .vertical-header {
+            writing-mode: vertical-rl;   /* vertical text, rotated 90° clockwise */
+            transform: rotate(180deg);   /* flip text to read top-to-bottom */
+            text-align: center;
+            padding: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+    </style>
+    <style>
+        .slides-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Adjust as needed */
+            margin: auto;
+            overflow: hidden;
+        }
+
+        .slides-container {
+            display: flex;
+            overflow-x: hidden; /* no scrollbar */
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .slide {
+            flex: 0 0 100%; /* take full container width */
+            scroll-snap-align: center;
+        }
+
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* round button */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .scroll-btn.left {
+            left: 0px;
+        }
+
+        .scroll-btn.right {
+            right: 0px;
+        }
+    </style>
+
+    <style>
+        .scroller-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* adjust as needed */
+            margin: auto;
+            overflow: hidden;
+        }
+
+        .scroller-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: scroll;  /* force scrollbar */
+            overflow-y: hidden;  /* only horizontal */
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Webkit browsers (Chrome, Safari, Edge) */
+        .scroller-container::-webkit-scrollbar {
+            height: 10px; /* scrollbar height */
+        }
+
+        .scroller-container::-webkit-scrollbar-track {
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .scroller-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 5px;
+        }
+
+        .scroller-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Firefox */
+        .scroller-container {
+            scrollbar-width: auto;       /* always show */
+            scrollbar-color: #888 #f0f0f0;
+        }
+
+        .scroller-slide {
+            flex: 0 0 auto; /* don't shrink */
+            scroll-snap-align: start;
+        }
+    </style>
+</head>
+
+<body>
+
+    <section class="hero">
+        <div class="hero-body">
+            <div class="container is-max-desktop">
+                <div class="columns is-centered is-gapless">
+                    <div class="column has-text-centered">
+                        <br><br>
+                        <h1 class="title is-1 publication-title">SAGE: Structure-Aware Generative Video Transitions between Diverse Clips</h1>
+
+                        <h3 class="title is-5"><center>Submission to Eurographics 2026</center></h3>
+                        <h3 class="title is-5"><center><b>paper 1157</b></center></h3>
+
+                        <!-- <div class="is-size-5 publication-authors">
+                            <span class="author-block">
+                                Author 1,
+                            </span>
+                            <span class="author-block">
+                                Author 2,
+                            </span>
+                            <span class="author-block">
+                                Author 3
+                            </span>
+                        </div> -->
+
+                        <!-- <div class="is-size-5 publication-authors">
+                            <span class="author-block">
+                                <a href="http://www.google.com">Mia Kan</a><sup>1*</sup>,
+                            </span>
+                            <span class="author-block">
+                                <a href="http://www.google.com">Yilin Liu</a><sup>1*</sup>,
+                            </span>
+                            <span class="author-block">
+                                <a href="http://www0.cs.ucl.ac.uk/staff/n.mitra/">Niloy Mitra</a><sup>1, 2</sup>
+                            </span>
+                        </div> -->
+
+                        <!-- * Equal contribution -->
+
+                        <!-- <div class="is-size-5 publication-authors"> -->
+                            <!-- <span class="author-block"><sup>1</sup>University College London</span> -->
+                            <!-- <span class="author-block"><sup>2</sup>Adobe Research</span> -->
+                        <!-- </div> -->
+
+                        <!-- <div class="column has-text-centered"> -->
+                            <!-- <div class="publication-links"> -->
+                                <!-- PDF Link. -->
+                                <!-- <span class="link-block"> -->
+                                    <!-- <a href="https://arxiv.org/abs/2504.04831" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="ai ai-arxiv"></i>
+                                        </span>
+                                        <span>arXiv</span>
+                                    </a> -->
+                                <!-- </span> -->
+                                <!-- <span class="link-block"> -->
+                                    <!-- <a href="https://arxiv.org/pdf/2504.04831" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </span>
+                                        <span>Paper</span>
+                                    </a> -->
+                                <!-- </span> -->
+                                <!-- Code Link. -->
+                                <!-- <span class="link-block"> -->
+                                    <!-- <a href="" target="_blank"
+                                        class="external-link button is-normal is-rounded is-dark">
+                                        <span class="icon">
+                                            <i class="fab fa-github"></i>
+                                        </span>
+                                        <span>Code (coming soon)</span>
+                                    </a> -->
+                                <!-- </span> -->
+                            <!-- </div> -->
+                        <!-- </div> -->
+    </section>
+
+    <section class="section">
+        <div class="has-text-centered">
+            <h4 class="title is-">Motivational examples</h4>
+            <div class="columns is-centered">
+                <div class="slides-wrapper">
+                <!-- Buttons -->
+                <button class="scroll-btn left" onclick="scrollSlides(this, -1)">&#10094;</button>
+                <button class="scroll-btn right" onclick="scrollSlides(this, 1)">&#10095;</button>
+
+                <!-- Slides -->
+                <ul class="slides-container">
+                    <li class="slide">
+                        <table style="margin-left:auto; margin-right:auto;">
+                            <thead>
+                            <tr>
+                                <th><p style="font-size:14px;">Artist (<a href="https://www.instagram.com/nikolaisavic/" target="_blank">@nikolaisavic</a>)</p></th>
+                                <th><p style="font-size:14px;">SAGE (ours)</p></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="padding: 20px;">
+                                <video class="raw-videos" autoplay muted loop width="150">
+                                    <source src="assets/makeup_beach/makeup_beach_GT.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                                <td style="padding: 20px;">
+                                <video class="raw-videos" playsinline autoplay muted loop width="150">
+                                    <source src="assets/makeup_beach/makeup_beach_ours.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </li>
+                    <li class="slide">
+                        <table style="margin-left:auto; margin-right:auto;">
+                            <thead>
+                            <tr>
+                                <th><p style="font-size:14px;">Artist (<a href="https://www.instagram.com/nikolaisavic/" target="_blank">@nikolaisavic</a>)</p></th>
+                                <th><p style="font-size:14px;">SAGE (ours)</p></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="padding: 14px;">
+                                <video class="raw-videos" playsinline autoplay muted loop width="150">
+                                    <source src="assets/tshirt_street/tshirt_street_GT.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                                <td style="padding: 14px;">
+                                <video class="raw-videos" playsinline autoplay muted loop width="150">
+                                    <source src="assets/tshirt_street/tshirt_street_ours.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </li>
+                    <li class="slide">
+                        <table style="margin-left:auto; margin-right:auto;">
+                            <thead>
+                            <tr>
+                                <th><p style="font-size:14px;">Artist (<a href="https://www.instagram.com/nikolaisavic/" target="_blank">@nikolaisavic</a>)</p></th>
+                                <th><p style="font-size:14px;">SAGE (ours)</p></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="padding: 20px;">
+                                <video class="raw-videos" playsinline autoplay muted loop width="150">
+                                    <source src="assets/dress_highway/dress_highway_GT.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                                <td style="padding: 20px;">
+                                <video class="raw-videos" playsinline autoplay muted loop width="150">
+                                    <source src="assets/dress_highway/dress_highway_ours.mp4" type="video/mp4">
+                                </video>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </li>
+                </ul>
+                </div>
+            </div>
+        </div>
+        
+        <br></br>
+        <div class="container is-max-desktop">
+            <!-- Abstract. -->
+            <div class="columns is-centered is-gapless has-text-centered">
+                <div class="column is-four-fifths">
+                    <h2 class="title is-3">Abstract</h2>
+                    <div class="content has-text-justified">
+                        <p>
+                          Video transitions aim to synthesize intermediate frames between two clips, but naïve approaches such as linear blending introduce artifacts that limit professional use or break temporal coherence. Traditional techniques (cross-fades, morphing, frame interpolation) and recent generative inbetweening methods can produce high-quality plausible intermediates, but they struggle with bridging <em>diverse clips</em> involving large temporal gaps or significant semantic differences, leaving a gap for content-aware and visually coherent transitions. We address this challenge by drawing on artistic workflows, distilling strategies such as aligning silhouettes and interpolating salient features to preserve structure and perceptual continuity. Building on this, we propose SAGE (Structure-Aware Generative vidEo transitions) as a  zeroshot approach that combines structural guidance, provided via line maps and motion flow, with generative synthesis, enabling smooth, semantically consistent transitions without fine-tuning. Extensive experiments and comparison with current alternatives, namely [<a href="https://arxiv.org/abs/2202.04901">FILM</a>, <a href="https://arxiv.org/pdf/2408.13413">TVG</a>, <a href="https://arxiv.org/abs/2312.07409">DiffMorpher</a>, <a href="https://arxiv.org/abs/2503.07598">VACE</a>, <a href="https://arxiv.org/abs/2412.11755">GI</a>], demonstrate that SAGE outperforms both classical and generative baselines on quantitative metrics and user studies for producing transitions between diverse clips. Code to be released on acceptance.</p>
+                    </div>
+                    <br><br>
+                    <section class="hero teaser">
+                        <div class="container is-max-desktop has-text-justified">
+                            <div class="hero-body" style="text-align: center; margin-top:-50px;">
+                                <img src="assets/figures/teaser_sage.png" class="center" width="800" />
+                            </div>
+                            <b>SAGE: Structure-Aware Generative vidEo transitions.</b> Given two diverse clips (top), Clip A and Clip B, prior approaches (bottom) (e.g., crossfade, DiffMorpher, Generative Inbetweening) often suffer from ghosting, structural collapse, or flicker. We introduce SAGE that extracts structural lines and motion cues, propagates them via B-spline trajectories to produce structural guidance. The guidance is then used to condition a pretrained diffusion model to synthesize temporally smooth with motion-coherent transitions (middle) in a zero-shot setting.
+                        </div>
+                    </section>
+                </div>
+            </div>
+            
+            <br></br>
+            <div class="has-text-centered">
+                <h4 class="title is-">Results</h4>
+                <p style="color: rgb(8, 160, 66);"><b>Scroll</b> left/right</p>
+                <div class="columns is-centered">
+                    <div class="scroller-wrapper">
+                        <!-- Scroller -->
+                        <ul class="scroller-container" id="dragScroller">
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Horse-dog</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="450">
+                                                    <source src="assets/horse_dog/horse_dog_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Helicopter-boat</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos " playsinline autoplay muted loop width="450">
+                                                    <source src="assets/helicopter_boat/helicopter_boat_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Cab-train</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="450">
+                                                    <source src="assets/cab_train/cab_train_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Handkerchief-cruise</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="142">
+                                                    <source src="assets/handkerchief_cruise/handkerchief_cruise_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Surfer-speedboat</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="450">
+                                                    <source src="assets/surfer_speedboat/surfer_speedboat_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Castle-palace</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="450">
+                                                    <source src="assets/castle_palace/castle_palace_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Candy-cloud</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="142">
+                                                    <source src="assets/candy_cloud/candy_cloud_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Fish-giraffe</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="450">
+                                                    <source src="assets/fish_giraffe/fish_giraffe_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                            <li class="scroller-slide">
+                                <table style="margin-left:auto; margin-right:auto;">
+                                    <thead>
+                                        <tr>
+                                            <th><p style="font-size:12px;">Skatepark-biker</p></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding: 5px;">
+                                                <video class="raw-videos" playsinline autoplay muted loop width="133">
+                                                    <source src="assets/skatepark_biker/skatepark_biker_ours.mp4" type="video/mp4">
+                                                </video>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <section class="section">
+                <div class="has-text-centered">
+                    <h2 class="title is-3">Comparisons</h2>
+                    <p style="color: rgb(8, 160, 66);"><b>Hover/leave</b> mouse on video to <b>play/pause</b> videos of entire row.</p>
+                    <div class="columns is-centered">
+                        <table style="margin-left:auto; margin-right:auto; border-collapse: collapse;">
+                            <thead>
+                            <tr>
+                                <th></th> <!-- empty corner for row headers -->
+                                <th><p style="font-size:14px;">Input – Clip A</p></th>
+                                <th style="border-right: 1px solid grey; ">
+                                    <p style="font-size:14px;">Input – Clip B</p>
+                                </th>
+                                <th>ours</th>
+                                <th><a href="https://arxiv.org/abs/2202.04901" style="font-size:14px; text-decoration:none;">FILM ['22]</a></th>
+                                <th><a href="https://arxiv.org/abs/2408.13413" style="font-size:14px; text-decoration:none;">TVG ['24]</a></th>
+                                <th><a href="https://arxiv.org/abs/2312.07409" style="font-size:14px; text-decoration:none;">DiffMorpher ['24]</a></th>
+                                <th><a href="https://arxiv.org/abs/2503.07598" style="font-size:14px; text-decoration:none;">VACE ['25]</a></th>
+                                <th><a href="https://arxiv.org/abs/2412.11755" style="font-size:14px; text-decoration:none;">GI ['25]</a></th>
+                                
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Cab-train</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/train.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                            <source src="assets/cab_train/cab_train_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Helicopter-boat</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/boat.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/helicopter_boat/helicopter_boat_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Fish-giraffe</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/giraffe.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/fish_giraffe/fish_giraffe_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Skatepark-biker</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/biker.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/skatepark_biker/skatepark_biker_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Candy-cloud</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/cloud.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/candy_cloud/candy_cloud_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr class="hover-play-row">
+                                    <th class="vertical-header" scope="row">Handkerchief-cruise</th>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px; border-right: 1px solid grey;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/cruise.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_FILM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_TVG.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_DM.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_VACE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-video" playsinline muted loop width="175">
+                                        <source src="assets/handkerchief_cruise/handkerchief_cruise_GI.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th><p style="font-size:14px;">Input – Clip A</p></th>
+                                    <th style="border-right: 1px solid grey;"><p style="font-size:14px;">Input – Clip B</p></th>
+                                    <th>ours</th>
+                                    <th><a href="https://arxiv.org/abs/2202.04901" style="font-size:14px; text-decoration:none;">FILM ['22]</a></th>
+                                    <th><a href="https://arxiv.org/abs/2408.13413" style="font-size:14px; text-decoration:none;">TVG ['24]</a></th>
+                                    <th><a href="https://arxiv.org/abs/2312.07409" style="font-size:14px; text-decoration:none;">DiffMorpher ['24]</a></th>
+                                    <th><a href="https://arxiv.org/abs/2503.07598" style="font-size:14px; text-decoration:none;">VACE ['25]</a></th>
+                                    <th><a href="https://arxiv.org/abs/2412.11755" style="font-size:14px; text-decoration:none;">GI ['25]</a></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="has-text-centered">
+                    <h2 class="title is-3">SAGE (ours) vs. <a href="https://arxiv.org/abs/2310.20700" target="_blank">SEINE</a></h2>
+                    <div class="content has-text-justified" style="max-width: 1250px; margin: 0 auto;">
+                        <p>We selected two challenging examples from the SEINE project page where the start and end frames differ significantly. To create comparable inputs, we generated short video clips around these frames using an image-to-video model. We then applied SAGE to these clip pairs. The results below highlight that SAGE produces smoother, structurally consistent transitions, while SEINE often struggles with motion coherence and structural stability in such diverse settings.</p>
+                    </div>
+                    <div class="columns is-centered">
+                        <table style="margin-left:auto; margin-right:auto; border-collapse: collapse;">
+                            <thead>
+                            <tr>
+                                <th>ours</th>
+                                <th><a href="https://arxiv.org/abs/2310.20700" style="font-size:14px; text-decoration:none;">SEINE ['23]</a></th>
+                                
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-seine-video" autoplay muted loop>
+                                            <source src="assets/racoon_A_racoon_B/racoonA_racoonB_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-seine-video" autoplay playsinline muted loop>
+                                            <source src="assets/racoon_A_racoon_B/racoonA_racoonB_SEINE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-seine-video" autoplay muted loop>
+                                            <source src="assets/flowers_A_flowers_B/flowersA_flowersB_ours.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                    <td style="padding: 5px;">
+                                        <video class="sync-seine-video" autoplay playsinline muted loop>
+                                            <source src="assets/flowers_A_flowers_B/flowersA_flowersB_SEINE.mp4" type="video/mp4">
+                                        </video>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            
+
+            <br></br>
+            <div class="has-text-centered">
+                <h4 class="title is-4">Line interpolation: applying motion to detected structures with optical flow </h4>
+                    <p style="color: rgb(8, 160, 66);"><b>Hover/leave</b> mouse to <b>play/pause</b> each input video.</p>
+                <div class="columns is-centered">
+                    <table style="margin-left:auto; margin-right:auto;">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th><p style="font-size:18px;">Input – Clip A</p></th>
+                                <th><p style="font-size:18px;">Flow</p></th>
+                                <th><p style="font-size:18px;">Interpolation</p></th>
+                                <th><p style="font-size:18px;">Flow</p></th>
+                                <th><p style="font-size:18px;">Input – Clip B</p></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th class="vertical-header" scope="row">Cab-train</th>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="130">
+                                        <source src="assets/cab_train/cab.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_cab_trainA.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/cab_train/cab_train_conditions.gif" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_cab_trainB.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="130">
+                                        <source src="assets/cab_train/train.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="vertical-header" scope="row">Helicopter-boat</th>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="130">
+                                        <source src="assets/helicopter_boat/helicopter.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_helicopter_boatA.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/helicopter_boat_conditions.gif" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_helicopter_boatB.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="130">
+                                         <source src="assets/helicopter_boat/boat.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="vertical-header" scope="row">Surfer-speedboat</th>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="130">
+                                        <source src="assets/surfer_speedboat/surfer.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_surfer_speedboatA.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/surfer_speedboat_conditions.gif" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_surfer_speedboatB.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="175">
+                                        <source src="assets/surfer_speedboat/speedboat.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="vertical-header" scope="row">Horse-dog</th>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="175">
+                                        <source src="assets/horse_dog/horse.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_horse_dogA.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/horse_dog/horse_dog_conditions.gif" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <img class="sync-images" src="assets/figures/flow_horse_dogB.png" width="200">
+                                </td>
+                                <td style="padding: 10px;">
+                                    <video class="sync-cond-videos" playsinline muted loop width="175">
+                                        <source src="assets/horse_dog/dog.mp4" type="video/mp4">
+                                    </video>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <br></br>
+            <div class="has-text-centered">
+                <h4 class="title is-3">Ablation study</h4>
+                <div class="content has-text-justified" style="max-width: 1250px; margin: 0 auto;">
+                    <p>Note that when the motions in the two source clips are already well aligned, simple linear blending of matched structures performs comparably to our B-spline approach. However, for more diverse clip pairs—where motion trajectories differ in direction, scale, or continuity—B-spline interpolation produces smoother global paths and more natural motion inbetweening, avoiding the abrupt shifts and trajectory crossings that arise with linear blending.</p></div>
+                    <br></br>
+                    <p style="color: rgb(8, 75, 193);">* Note: In the top row, the detected lines are shown only during the transition frames.</p>
+                <div class="columns is-centered">
+                    <div class="slides-wrapper"  style="width:100%; max-height:500px; max-width:1100px; margin:0 auto;">
+                    <!-- Buttons -->
+                    <button class="scroll-btn left" onclick="scrollSlides(this, -1)">&#10094;</button>
+                    <button class="scroll-btn right" onclick="scrollSlides(this, 1)">&#10095;</button>
+
+                    <!-- Slides -->
+                    <ul class="slides-container">
+                        <li class="slide">
+                            <table style="margin-left:auto; margin-right:auto;">
+                                <thead>
+                                <tr>
+                                    <th><p style="font-size:14px;">w/o structural guidance</p></th>
+                                    <th><p style="font-size:14px;">w/o layer-aware matching</p></th>
+                                    <th><p style="font-size:14px;">w/o motion-aware trajectories</p></th>
+                                    <th><p style="font-size:14px;">ours</p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_GI_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_no_layers_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_fg_linear_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_ours_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_cab_train_GI.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_cab_train_no_layers.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_cab_train_fg_linear.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/cab_train_cab_train_ours.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        <li class="slide">
+                            <table style="margin-left:auto; margin-right:auto;">
+                                <thead>
+                                <tr>
+                                    <th><p style="font-size:14px;">w/o structural guidance</p></th>
+                                    <th><p style="font-size:14px;">w/o layer-aware matching</p></th>
+                                    <th><p style="font-size:14px;">w/o motion-aware trajectories</p></th>
+                                    <th><p style="font-size:14px;">ours</p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_GI_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_no_layers_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_fg_linear_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_ours_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_GI.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_no_layers.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_fg_linear.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/horse_dog_ours.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        
+                        <li class="slide">
+                            <table style="margin-left:auto; margin-right:auto;">
+                                <thead>
+                                <tr>
+                                    <th><p style="font-size:14px;">w/o structural guidance</p></th>
+                                    <th><p style="font-size:14px;">w/o layer-aware matching</p></th>
+                                    <th><p style="font-size:14px;">w/o motion-aware trajectories</p></th>
+                                    <th><p style="font-size:14px;">ours</p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_GI_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_no_layers_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_fg_linear_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_ours_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_GI.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_no_layers.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_fg_linear.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/surfer_speedboat_ours.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                        <li class="slide">
+                            <table style="margin-left:auto; margin-right:auto;">
+                                <thead>
+                                <tr>
+                                    <th><p style="font-size:14px;">w/o structural guidance</p></th>
+                                    <th><p style="font-size:14px;">w/o layer-aware matching</p></th>
+                                    <th><p style="font-size:14px;">w/o motion-aware trajectories</p></th>
+                                    <th><p style="font-size:14px;">ours</p></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_GI_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_no_layers_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_fg_linear_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_ours_pose.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_GI.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_no_layers.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_fg_linear.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                        <td style="padding: 5px;">
+                                            <video class="ablation-videos" playsinline autoplay muted loop width="250">
+                                                <source src="assets/figures/ablation/castle_palace_ours.mp4" type="video/mp4">
+                                            </video>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </li>
+                    </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Select all .my-switcher containers
+                    const switchers = document.querySelectorAll('.my-switcher');
+
+                    switchers.forEach(switcher => {
+                        // For each switcher, find its tabs and contents
+                        const tabLinks = switcher.querySelectorAll('.tabs li');
+                        const tabContents = switcher.querySelectorAll('.tab-content');
+
+                        // Attach click events to each tab link
+                        tabLinks.forEach(link => {
+                            link.addEventListener('click', () => {
+                                // 1) Identify which content to show
+                                const targetName = link.getAttribute('data-tab');
+
+                                // 2) Deactivate all tabs in this switcher
+                                tabLinks.forEach(t => t.classList.remove('is-active'));
+                                // 3) Activate the clicked tab
+                                link.classList.add('is-active');
+
+                                // 4) Hide all tab-content in this switcher
+                                tabContents.forEach(tc => tc.classList.remove('is-active'));
+
+                                // 5) Find the matching content and show it
+                                const targetContent = switcher.querySelector(`[data-content="${targetName}"]`);
+                                if (targetContent) {
+                                    targetContent.classList.add('is-active');
+                                }
+                            });
+                        });
+                    });
+                });
+
+                // document.addEventListener("DOMContentLoaded", () => {
+                //     const videos = document.querySelectorAll(".sync-video");
+                //     let loadedCount = 0;
+
+                //     videos.forEach(video => {
+                //     video.addEventListener("loadedmetadata", () => {
+                //         loadedCount++;
+                //         if (loadedCount === videos.length) {
+                //         videos.forEach(v => {
+                //             v.currentTime = 0;  // reset start time
+                //             v.play();
+                //         });
+                //         }
+                //     });
+                //     });
+                // });
+
+                document.querySelectorAll('.sync-video').forEach(vid => 
+                    vid.pause()
+                );
+
+                // Find all rows that should trigger video play
+                document.querySelectorAll(".hover-play-row").forEach(row => {
+                    const videos = row.querySelectorAll("video");
+
+                    videos.forEach(video => video.pause());
+
+                    row.addEventListener("mouseenter", () => {
+                    videos.forEach(video => video.play());
+                    });
+
+                    row.addEventListener("mouseleave", () => {
+                    videos.forEach(video => video.pause());
+                    });
+                });
+
+                function scrollSlides(button, direction) {
+                    const wrapper = button.closest(".slides-wrapper"); // find parent container
+                    const container = wrapper.querySelector(".slides-container");
+                    const slide = container.querySelector(".slide");
+                    const slideWidth = slide.offsetWidth; 
+
+                    container.scrollBy({ left: direction * slideWidth, behavior: "smooth" });
+
+                    // Reset & sync videos on current slide
+                    setTimeout(() => {
+                        const currentIndex = Math.round(container.scrollLeft / slideWidth);
+                        const currentSlide = container.querySelectorAll(".slide")[currentIndex];
+                        const videos = currentSlide.querySelectorAll("video");
+
+                        videos.forEach(video => {
+                        video.currentTime = 0;
+                        video.play();
+                        });
+                    }, 400); // wait until scroll finishes
+                }
+
+                let currentIndex = 0;
+
+                function scrollSlides(button, direction) {
+                    const wrapper = button.closest(".slides-wrapper");   // find the wrapper for this button
+                    const container = wrapper.querySelector(".slides-container"); // correct container
+                    const slides = container.querySelectorAll(".slide");
+                    const slideWidth = slides[0].offsetWidth;
+
+                    // update index
+                    currentIndex += direction;
+                    if (currentIndex < 0) currentIndex = slides.length - 1;
+                    if (currentIndex >= slides.length) currentIndex = 0;
+
+                    // scroll to the new slide
+                    container.scrollTo({ left: currentIndex * slideWidth, behavior: "smooth" });
+
+                    // pause all videos inside this container
+                    container.querySelectorAll("video").forEach(v => v.pause());
+
+                    // reset and play videos in the active slide
+                    const activeSlide = slides[currentIndex];
+                    activeSlide.querySelectorAll("video").forEach(v => {
+                        v.currentTime = 0;
+                        v.play();
+                    });
+                }
+
+                // On load: make sure only first slide’s videos play
+                window.addEventListener("load", () => {
+                    document.querySelectorAll(".slides-wrapper").forEach(wrapper => {
+                        const firstSlide = wrapper.querySelector(".slide");
+                        firstSlide.querySelectorAll("video").forEach(v => {
+                            v.currentTime = 0;
+                            v.play();
+                        });
+                    });
+                });
+
+                const scroller = document.getElementById("dragScroller");
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                scroller.addEventListener("mousedown", (e) => {
+                    isDown = true;
+                    startX = e.pageX - scroller.offsetLeft;
+                    scrollLeft = scroller.scrollLeft;
+                });
+                scroller.addEventListener("mouseleave", () => { isDown = false; });
+                scroller.addEventListener("mouseup", () => { isDown = false; });
+                scroller.addEventListener("mousemove", (e) => {
+                    if(!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - scroller.offsetLeft;
+                    const walk = (x - startX) * 1;
+                    scroller.scrollLeft = scrollLeft - walk;
+                });
+
+                // Touch support
+                scroller.addEventListener("touchstart", (e) => {
+                    isDown = true;
+                    startX = e.touches[0].pageX - scroller.offsetLeft;
+                    scrollLeft = scroller.scrollLeft;
+                });
+                scroller.addEventListener("touchend", () => { isDown = false; });
+                scroller.addEventListener("touchmove", (e) => {
+                    if(!isDown) return;
+                    const x = e.touches[0].pageX - scroller.offsetLeft;
+                    const walk = (x - startX) * 1;
+                    scroller.scrollLeft = scrollLeft - walk;
+                });
+
+                document.querySelectorAll('.sync-cond-videos').forEach(video => {
+                    video.addEventListener('mouseenter', () => video.play());
+                    video.addEventListener('mouseleave', () => video.pause());
+                });
+
+                document.addEventListener("DOMContentLoaded", () => {
+                    const videos = document.querySelectorAll(".ablation-videos");
+
+                    if (videos.length === 0) return;
+
+                    // Ensure every video has the correct properties
+                    videos.forEach(v => {
+                        v.loop = true;
+                        v.muted = true;
+                        v.autoplay = true;
+                        v.playsInline = true;
+                    });
+
+                    // Pick the first video as the master reference
+                    const master = videos[0];
+
+                    // Function to sync currentTime across videos
+                    function syncVideos() {
+                        const t = master.currentTime;
+                        videos.forEach(v => {
+                            if (v !== master && Math.abs(v.currentTime - t) > 0.05) {
+                                v.currentTime = t;
+                            }
+                        });
+                    }
+
+                    // Keep others aligned with the master
+                    master.addEventListener("timeupdate", syncVideos);
+
+                    // Play all when master plays
+                    master.addEventListener("play", () => {
+                        videos.forEach(v => {
+                            if (v.paused) v.play().catch(()=>{});
+                        });
+                    });
+
+                    // Start everything together
+                    videos.forEach(v => v.play().catch(()=>{}));
+                });
+            </script>
+
+        
+
+</body>
+
+</html>
