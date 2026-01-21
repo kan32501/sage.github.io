@@ -1017,7 +1017,7 @@
                             <table style="margin-left:auto; margin-right:auto;">
                                 <thead>
                                 <tr>
-                                    <th><p style="font-size:14px;">w/o structural guidance</p></th>
+                                    <th><p style="font-size:14px;">w/o correspondences</p></th>
                                     <th><p style="font-size:14px;">w/o layer-aware matching</p></th>
                                     <th><p style="font-size:14px;">w/o motion-aware trajectories</p></th>
                                     <th><p style="font-size:14px;">ours</p></th>
@@ -1248,6 +1248,49 @@
                         </li>
                     </ul>
                     </div>
+                </div>
+            </div>
+
+            <div class="has-text-centered">
+                <h4 class="title is-3">Limitations</h4>
+                <div class="content has-text-justified" style="max-width: 1250px; margin: 0 auto;">
+                    <p>A limitation of our current approach stems from its reliance on a video generative backbone pretrained heavily on human poses. At times, this specificity can cause the model to \hl{interpret certain line configurations as limbs and } hallucinate\st{s} human-like structures along structural edges. </p>
+                </div>
+                <div class="columns is-centered">
+                    <table style="margin-left:auto; margin-right:auto; border-collapse: collapse;">
+                        <thead>
+                        <tr>
+                            <th>Transition Frame</th>
+                            <th>Edge Map</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/transition_06.png" width="200">
+                                </td>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/map_06.png" width="200">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/transition_08.png" width="200">
+                                </td>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/map_08.png" width="200">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/transition_08.png" width="200">
+                                </td>
+                                <td style="padding: 5px;">
+                                    <img class="sync-images" src="assets/limitations/frames/map_08.png" width="200">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
